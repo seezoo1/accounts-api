@@ -1,0 +1,23 @@
+[
+	{
+		"accountType": "Checkings",
+		"firstName": "Daman",
+		"lastName": "Singh",
+		"accountReferenceNumber": "1234",
+		"customerReferenceNumber": "abcd"
+	},
+	{
+		"accountType": "Savings",
+		"firstName": "Daman",
+		"lastName": "Singh",
+		"accountReferenceNumber": "1235",
+		"customerReferenceNumber": "abcd"
+	},
+	{
+		"accountType": "Money Market",
+		"firstName": "Rhia",
+		"lastName": "Lucas",
+		"accountReferenceNumber": "1236",
+		"customerReferenceNumber": "mnop"
+	}
+]

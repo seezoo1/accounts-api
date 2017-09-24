@@ -1,0 +1,69 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+      "title":"accounts api",
+      "description":"a simple rest api using swagger docs and swagger tools",
+      "termsOfService":"free to use",
+      "contact":{
+        "name": "API Support",
+        "url": "http://www.swagger.io/support",
+        "email": "SEEZOO@gmail.com"
+      },
+      "version":"1.0"
+  },
+  "host":"localhost:8080",
+  "basePath": "/webservice",
+  "schemes": [ "http" ],
+  "consumes" : [ "application/json" ],
+  "produces" : [ "application/json" ],
+  "paths":{
+      "/accounts":{
+          "get":{
+            "x-swagger-router-controller": "Accounts",
+            "summary":"accounts api",
+            "description":"get all accounts",
+            "externalDocs":{
+              "description": "Find more info here",
+              "url": "https://swagger.io"
+            },
+            "consumes":[
+              "application/json"
+            ],
+            "produces":[
+              "application/json"
+            ],
+            "responses":{
+              "200":{
+                "description":"list of accounts",
+                "schema":{
+                  "type":"array",
+                  "items" : {
+                    "$ref" : "#/definitions/account"
+                  }
+                }
+              }
+            },
+            "schemes":[ "http" ]
+          }
+      }
+  },
+  "definitions":{
+    "account":{
+      "type":"object",
+      "properties":{
+        "accountType":{
+          "type":"string"
+        },
+        "accountReferenceNumber":{
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+
+    }
+  },
+  "externalDocs":{
+    "description": "Find more info here",
+    "url": "https://swagger.io"
+  }
+}

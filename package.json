@@ -1,0 +1,11 @@
+{
+  "name": "opensource-rest-api",
+  "description": "A free accounts API",
+  "version": "1.0",
+  "author": "Damandeep Singh",
+  "dependencies": {
+    "connect": "^3.6.2",
+    "http": "0.0.0",
+    "swagger-tools": "^0.10.1"
+  }
+}

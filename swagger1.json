@@ -1,0 +1,606 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Orchestration layer for the Cashier's Check Kiosk service.\n",
+    "version" : "1.0",
+    "title" : "CCK Orchestration Layer",
+    "contact" : {
+      "name" : "Tink Tank",
+      "email" : "TinkTank@capitalone.com"
+    },
+    "license" : {
+      "name" : "Capital One Proprietary",
+      "url" : "http://www.capitalone.com/license_path"
+    }
+  },
+  "host" : "api.capitalone.com",
+  "schemes" : [ "https" ],
+  "consumes" : [ "application/json" ],
+  "produces" : [ "application/json" ],
+  "paths" : {
+    "/auth/login" : {
+      "x-swagger-router-controller": "Auth",
+      "post" : {
+        "operationId": "login",
+        "tags" : [ "auth" ],
+        "summary" : "SSO login",
+        "description" : "Calls Login v4 eAPI with passed-in user credentials and returns the refCustomerId and indicates if the customer has any CCK eligible accounts\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "userLogin",
+          "description" : "User SSO credentials",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/userLogin"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK. Successfully logged in and has eligible accounts.",
+            "schema" : {
+              "$ref" : "#/definitions/loginResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout" : {
+      "x-swagger-router-controller": "Auth",
+      "post" : {
+        "operationId": "logout",
+        "tags" : [ "auth" ],
+        "summary" : "SSO logout",
+        "description" : "Ends client session\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "userLogout",
+          "description" : "User refCustomerId",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/userLogout"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK. Successfully logged out."
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/auth/otp" : {
+      "x-swagger-router-controller": "Auth",
+      "post" : {
+        "operationId": "initiateOtp",
+        "tags" : [ "auth" ],
+        "summary" : "Request OTP",
+        "description" : "Initiates OTP process\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "initiateOtp",
+          "description" : "User refCustomerId and acknowledgement of SMS charges",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/initiateOtp"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK. OTP requested."
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      },
+      "put" : {
+        "operationId": "confirmOtp",
+        "tags" : [ "auth" ],
+        "summary" : "Confirm OTP",
+        "description" : "Validates client-supplied OTP and returns upgraded token if valid\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "confirmOtp",
+          "description" : "User refCustomerId and OTP",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/confirmOtp"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK. OTP succesfully validated.",
+            "schema" : {
+              "$ref" : "#/definitions/otpResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request. No current session for refCustomerId or invalid PIN.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized. User not authorized for OTP challenge and/or refCustomerId does not match user for current session.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/auth/documentChallenge" : {
+      "x-swagger-router-controller": "Auth",
+      "post" : {
+        "operationId": "documentChallenge",
+        "tags" : [ "auth" ],
+        "summary" : "Confirm customer identity",
+        "description" : "Validates customer identity through ID scan and returns upgraded token if valid\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "documentChallenge",
+          "description" : "User refCustomerId and ID images",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/documentChallenge"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK. Documents successfully validated.",
+            "schema" : {
+              "$ref" : "#/definitions/otpResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request. No current session for refCustomerId or invalid documents.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized. User not authorized for ID scan and/or refCustomerId does not match user for current session.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{refCustomerId}" : {
+      "x-swagger-router-controller": "Accounts",
+      "get" : {
+        "tags" : [ "accounts" ],
+        "summary" : "List of CCK eligible accounts",
+        "description" : "Gets lits of all CCK eligible accounts for refCustomerId\n",
+        "parameters" : [ {
+          "name" : "refCustomerId",
+          "in" : "path",
+          "description" : "Reference ID for customer",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK.",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/account"
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "404" : {
+            "description" : "Not found. No such customer."
+          }
+        }
+      }
+    },
+    "/check" : {
+      "x-swagger-router-controller": "Check",
+      "get" : {
+        "tags" : [ "check" ],
+        "summary" : "List of checks",
+        "description" : "Gets list of all checks\n",
+        "parameters" : [ {
+          "name" : "refCustomerId",
+          "in" : "query",
+          "description" : "Query parameter for filtering by refCustomerId (optional)",
+          "required" : false,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK.",
+            "schema" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/check"
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "check" ],
+        "summary" : "Create new check",
+        "description" : "Creates a new check\n",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "check",
+          "description" : "Check object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/check"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK.",
+            "schema" : {
+              "$ref" : "#/definitions/check"
+            }
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized. User not authorized to create new checks and/or refCustomerId does not match user for current session.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/check/{refCheckId}" : {
+      "x-swagger-router-controller": "Check",
+      "put" : {
+        "tags" : [ "check" ],
+        "summary" : "Update check",
+        "description" : "Allows customer to make changes to a check before printing\n",
+        "parameters" : [ {
+          "name" : "refCheckId",
+          "in" : "path",
+          "description" : "Check reference ID",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "updateCheck",
+          "description" : "Check update object",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/checkUpdate"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK. Successfully updated."
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized. User not authorized to create new checks and/or refCustomerId does not match user for current session.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "check" ],
+        "summary" : "Cancel check",
+        "description" : "Delete/remove check entry from history\n",
+        "parameters" : [ {
+          "name" : "refCheckId",
+          "in" : "path",
+          "description" : "Check reference ID",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "updateCheck",
+          "description" : "Check update object",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/checkUpdate"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK. Successfully deleted."
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/check/{refCheckId}/print" : {
+      "x-swagger-router-controller": "Check",
+      "put" : {
+        "tags" : [ "check" ],
+        "summary" : "Print check",
+        "description" : "Sends command to printer to print check\n",
+        "parameters" : [ {
+          "name" : "refCheckId",
+          "in" : "path",
+          "description" : "Check reference ID",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK. Successfully executed."
+          },
+          "400" : {
+            "description" : "Bad request.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          },
+          "401" : {
+            "description" : "Not authorized. User not authorized to print checks and/or refCustomerId does not match user for current session.",
+            "schema" : {
+              "$ref" : "#/definitions/invalidRequest"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "loginResponse" : {
+      "type" : "object",
+      "required" : [ "hasEligibleAccounts", "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string",
+          "description" : "Customer reference ID"
+        },
+        "hasEligibleAccounts" : {
+          "type" : "boolean",
+          "description" : "Indicates whether a customer has any CCK eligible accounts"
+        }
+      },
+      "title" : "loginResponse"
+    },
+    "otpResponse" : {
+      "type" : "object",
+      "required" : [ "token" ],
+      "properties" : {
+        "token" : {
+          "type" : "string",
+          "description" : "Upgraded token"
+        }
+      },
+      "title" : "otpResponse"
+    },
+    "documentChallengeResponse" : {
+      "type" : "object",
+      "required" : [ "token" ],
+      "properties" : {
+        "token" : {
+          "type" : "string",
+          "description" : "Upgraded token"
+        }
+      },
+      "title" : "documentChallengeResponse"
+    },
+    "account" : {
+      "type" : "object",
+      "required" : [ "accountType", "firstName", "lastName", "refAccountNumber", "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string",
+          "description" : "Customer reference ID"
+        },
+        "firstName" : {
+          "type" : "string",
+          "description" : "Customer first name"
+        },
+        "lastName" : {
+          "type" : "string",
+          "description" : "Customer last name"
+        },
+        "accountType" : {
+          "type" : "string",
+          "description" : "Account type"
+        },
+        "refAccountNumber" : {
+          "type" : "string",
+          "description" : "Account number"
+        }
+      },
+      "title" : "account"
+    },
+    "check" : {
+      "type" : "object",
+      "required" : [ "amount", "amountText", "dateCreated", "memo", "payableAccount", "payee", "refCheckId", "refCustomerId", "status" ],
+      "properties" : {
+        "refCheckId" : {
+          "type" : "string",
+          "description" : "Check reference ID"
+        },
+        "refCustomerId" : {
+          "type" : "string",
+          "description" : "Customer reference ID"
+        },
+        "dateCreated" : {
+          "type" : "string",
+          "description" : "Date of creation"
+        },
+        "amount" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "Check amount"
+        },
+        "amountText" : {
+          "type" : "string",
+          "description" : "Check amount in text"
+        },
+        "memo" : {
+          "type" : "string",
+          "description" : "Check memo"
+        },
+        "payee" : {
+          "type" : "string",
+          "description" : "Check payee"
+        },
+        "status" : {
+          "type" : "string",
+          "description" : "Indicates stage of lifecycle that check is in"
+        },
+        "payableAccount" : {
+          "description" : "Account linked to check",
+          "$ref" : "#/definitions/account"
+        }
+      },
+      "title" : "check"
+    },
+    "checkUpdate" : {
+      "type" : "object",
+      "required" : [ "amount", "memo", "payableAccount", "payee" ],
+      "properties" : {
+        "amount" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "Check amount"
+        },
+        "memo" : {
+          "type" : "string",
+          "description" : "Check memo"
+        },
+        "payee" : {
+          "type" : "string",
+          "description" : "Check payee"
+        },
+        "payableAccount" : {
+          "description" : "Account linked to check",
+          "$ref" : "#/definitions/account"
+        }
+      },
+      "title" : "checkResponse"
+    },
+    "checkResponse" : {
+      "type" : "object",
+      "required" : [ "refCheckId" ],
+      "properties" : {
+        "refCheckId" : {
+          "type" : "string",
+          "description" : "Check reference ID"
+        }
+      },
+      "title" : "checkResponse"
+    },
+    "invalidRequest" : {
+      "type" : "object",
+      "properties" : {
+        "message" : {
+          "type" : "string"
+        }
+      },
+      "title" : "invalidRequest"
+    },
+    "userLogin" : {
+      "type" : "object",
+      "required" : [ "password", "username" ],
+      "properties" : {
+        "username" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string",
+          "format" : "password"
+        }
+      }
+    },
+    "userLogout" : {
+      "type" : "object",
+      "required" : [ "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string"
+        }
+      }
+    },
+    "confirmOtp" : {
+      "type" : "object",
+      "required" : [ "pin", "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string"
+        },
+        "pin" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "initiateOtp" : {
+      "type" : "object",
+      "required" : [ "acceptSmsCharges", "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string"
+        },
+        "acceptSmsCharges" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "documentChallenge" : {
+      "type" : "object",
+      "required" : [ "images", "refCustomerId" ],
+      "properties" : {
+        "refCustomerId" : {
+          "type" : "string"
+        },
+        "images" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "format" : "base64"
+          }
+        }
+      }
+    }
+  }
+}
